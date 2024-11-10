@@ -22,14 +22,14 @@ object GenerateMeasurements {
   lazy val rootGen = for {
     id <- Gen.uuid
     measurements <- summon[Arbitrary[RootDeviceMeasurements]].arbitrary
-    number <- Gen.chooseNum(4, 40)
+    number <- Gen.chooseNum(4, 30)
     dev <- Gen.listOfN(number, devGen)
   } yield RootDevice(id, measurements = measurements, devices = dev)
 
   lazy val devGen = for {
     id <- Gen.uuid
     measurements <- summon[Arbitrary[DeviceMeasurements]].arbitrary
-    number <- Gen.chooseNum(4, 40)
+    number <- Gen.chooseNum(4, 30)
     sub <- Gen.listOfN(number, subGen)
   } yield Device(id, measurements, sub)
 

@@ -11,18 +11,10 @@ object GenerateMeasurementsMain extends IOApp.Simple {
 
   val run: IO[Unit] = {
 
-    val topic = "scala-parquet-example.source"
+    val topic = "scala-parquet-example"
 
     val producerSettings =
       ProducerSettings[IO, String, String].withBootstrapServers("localhost:9092")
-
-    def processRecords(
-      producer: KafkaProducer[IO, String, String]
-    )(records: Chunk[ConsumerRecord[String, String]]): IO[CommitNow] = {
-      val producerRecords = records
-        .map(consumerRecord => ProducerRecord("topic", consumerRecord.key, consumerRecord.value))
-      producer.produce(producerRecords).flatten.as(CommitNow)
-    }
 
     val S = for {
       producer <- KafkaProducer
@@ -36,14 +28,14 @@ object GenerateMeasurementsMain extends IOApp.Simple {
 
       _ <- GenerateMeasurements.rootDevice
 //        .metered(1.millisecond)
-        .take(100)
-        .chunks
+        .take(10000)
+        .chunkN(100)
         .evalMap { chunk =>
          producer.produce(ProducerRecords(
            chunk.map { root =>
              ProducerRecord(topic, root.rootId.toString, writeToString(root))
            }
-         ))
+         )).flatTap(_ => IO.println("chunk!"))
       }
 
     } yield ()
